@@ -3,6 +3,10 @@ on: [push]
 jobs:
   deploy-rpcs3-android-bot:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      
     steps:
       - uses: actions/checkout@v4
       - name: Login to GitHub Container Registry
