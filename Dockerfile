@@ -9,4 +9,6 @@ RUN npm install
 
 COPY . .
 
-CMD ["node", "src/main.js"]
+RUN chmod +x run_bot.sh
+
+CMD ["sh", "./run_bot.sh"]
