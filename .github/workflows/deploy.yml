@@ -15,7 +15,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Build and push the rpcs3-android-bot Docker image
         run: |
           docker build . -t ghcr.io/ishan09811/rpcs3-android-bot:latest
           docker push ghcr.io/ishan09811/rpcs3-android-bot:latest
+
+      - name: Run the bot container
+        run: |
+          docker run -d --restart always --name rpcs3-android-bot \
+            -e TOKEN=${{ secrets.TOKEN }} \
+            ghcr.io/ishan09811/rpcs3-android-bot:latest
