@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, PermissionsBitField } = require("discord.js");
 
 const client = new Client({
   intents: [
@@ -13,6 +13,8 @@ const client = new Client({
 client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
+
+const warnings = new Map();
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
@@ -30,6 +32,27 @@ client.on("messageCreate", async (message) => {
 
   if (message.content.startsWith("!ping")) {
        return message.reply("pong!");
+  }
+
+  if (message.content.startsWith("!warn")) {
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+      return message.reply("You don't have permission to warn!");
+    }
+
+    const args = message.content.split(" ");
+    const member = message.mentions.members.first();
+    if (!member) return message.reply("Please mention a user to warn!");
+
+    const reason = args.slice(2).join(" ") || "No reason provided.";
+
+    if (!warnings.has(member.id)) {
+      warnings.set(member.id, []);
+    }
+    warnings.get(member.id).push(reason);
+
+    message.channel.send(
+      `${member.user.tag} has been warned. Reason: ${reason} (Total warnings: ${warnings.get(member.id).length})`
+    );
   }
 });
 
