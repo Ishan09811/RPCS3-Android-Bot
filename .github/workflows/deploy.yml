@@ -1,0 +1,17 @@
+name: deploy
+on: [push]
+jobs:
+  deploy-rpcs3-android-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push the rpcs3-android-bot Docker image
+        run: |
+          docker build . -t ghcr.io/Ishan09811/RPCS3-Android-Bot:latest
+          docker push ghcr.io/Ishan09811/RPCS3-Android-Bot:latest
