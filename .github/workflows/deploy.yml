@@ -23,6 +23,6 @@ jobs:
 
       - name: Run the bot container
         run: |
-          docker run -d --restart always --name rpcs3-android-bot \
+          docker run -d --restart unless-stopped --name rpcs3-android-bot \
             -e TOKEN=${{ secrets.TOKEN }} \
             ghcr.io/ishan09811/rpcs3-android-bot:latest
