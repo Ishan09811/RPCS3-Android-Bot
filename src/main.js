@@ -33,8 +33,7 @@ const COMMANDS = [
     )
 ];
 
-client.once("ready", () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+async function registerCommands() {
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   try {
     console.log("Registering slash commands...");
@@ -46,6 +45,11 @@ client.once("ready", () => {
   } catch (error) {
     console.error("Failed to register commands:", error);
   }
+}
+
+client.once("ready", () => {
+  console.log(`Logged in as ${client.user.tag}!`);
+  await registerCommands();
 });
 
 const warnings = new Map();
