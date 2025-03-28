@@ -49,7 +49,7 @@ async function registerCommands() {
 
 client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
-  await registerCommands();
+  registerCommands();
 });
 
 const warnings = new Map();
