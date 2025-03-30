@@ -8,6 +8,8 @@ const {
   Routes
 } = require("discord.js");
 
+const axios = require("axios");
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -18,6 +20,9 @@ const client = new Client({
 });
 
 const COMMANDS = [
+  new SlashCommandBuilder()
+    .setName("download")
+    .setDescription("Gets the latest release of RPCS3-Android"),
   new SlashCommandBuilder()
     .setName("say")
     .setDescription("Sends a message as the bot (hidden command)")
@@ -98,6 +103,28 @@ client.on("interactionCreate", async (interaction) => {
   if (!interaction.isCommand()) return;
 
   const { commandName, options, member } = interaction;
+
+  if (commandName === "download") {
+    try {
+      const response = await axios.get("https://api.github.com/repos/RPCS3-Android/rpcs3-android/releases", {
+        headers: { "Accept": "application/vnd.github.v3+json" }
+      });
+      
+      const releases = response.data;
+      if (releases.length === 0) {
+        return interaction.reply({ content: "No releases found.", ephemeral: true });
+      }
+      
+      const latestRelease = releases[0];
+      const releaseUrl = latestRelease.html_url;
+      const releaseName = latestRelease.name;
+      
+      return interaction.reply({ content: `Latest release: **${releaseName}**\nDownload here: ${releaseUrl}` });
+    } catch (error) {
+      console.error("Error fetching releases:", error);
+      return interaction.reply({ content: "Failed to fetch the latest release.", ephemeral: true });
+    }
+  }
   
   if (commandName === "say") {
     const hasPermission = member.roles.cache.has("1346566185956671531") ||
