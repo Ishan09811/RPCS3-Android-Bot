@@ -19,6 +19,17 @@ const client = new Client({
   ],
 });
 
+const { Client: PgClient } = require("pg");
+
+const db = new PgClient({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+db.connect()
+  .then(() => console.log("✅ Connected to Neon PostgreSQL!"))
+  .catch(err => console.error("❌ Database connection error:", err));
+
 const COMMANDS = [
   new SlashCommandBuilder()
     .setName("download")
@@ -52,9 +63,25 @@ async function registerCommands() {
   }
 }
 
+async function initDB() {
+  try {
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS warnings (
+          id SERIAL PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          reason TEXT NOT NULL
+        )
+    `);
+    console.log("✅ Warnings table is ready.");
+  } catch (error) {
+    console.error("Failed to init db:", error);
+  }
+}
+
 client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
   registerCommands();
+  initDB();
 });
 
 const warnings = new Map();
@@ -88,14 +115,19 @@ client.on("messageCreate", async (message) => {
 
     const reason = args.slice(2).join(" ") || "No reason provided.";
 
-    if (!warnings.has(member.id)) {
-      warnings.set(member.id, []);
-    }
-    warnings.get(member.id).push(reason);
+    try {
+      await db.query("INSERT INTO warnings (user_id, reason) VALUES ($1, $2)", [member.id, reason]);
 
-    message.channel.send(
-      `${member.user.tag} has been warned. Reason: ${reason} (Total warnings: ${warnings.get(member.id).length})`
-    );
+      const countResult = await db.query("SELECT COUNT(*) FROM warnings WHERE user_id = $1", [member.id]);
+      const totalWarnings = countResult.rows[0].count;
+
+      message.channel.send(
+        `${member.user.tag} has been warned. Reason: ${reason} (Total warnings: ${totalWarnings})`
+      );
+    } catch (err) {
+      console.error("Database error:", err);
+      message.reply("❌ There was an error saving the warning.");
+    }
   }
 });
 
